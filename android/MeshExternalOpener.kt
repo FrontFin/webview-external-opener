@@ -48,9 +48,13 @@ fun WebView.enableMeshExternalOpener() {
 
 /** The app that claims [uri], else the browser, in its own task. Ignores a URL nothing handles */
 private fun Context.openExternal(uri: Uri) {
-    runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)
-        .addCategory(Intent.CATEGORY_BROWSABLE)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    runCatching {
+        startActivity(
+            Intent(Intent.ACTION_VIEW, uri)
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }
 }
 
 /**

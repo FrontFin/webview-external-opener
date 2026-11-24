@@ -30,14 +30,16 @@ extension MeshLinkWebView on InAppWebViewController {
   /// without message listeners, there nothing leaves the WebView.
   Future<void> enableMeshExternalOpener() async {
     if (!await _supportsMessageListeners()) return;
-    await addWebMessageListener(WebMessageListener(
-      jsObjectName: _meshExternalOpener,
-      allowedOriginRules: {_meshOriginRule},
-      onPostMessage: (message, sourceOrigin, isMainFrame, replyProxy) {
-        final url = message?.data;
-        if (url is String) _openExternal(url);
-      },
-    ));
+    await addWebMessageListener(
+      WebMessageListener(
+        jsObjectName: _meshExternalOpener,
+        allowedOriginRules: {_meshOriginRule},
+        onPostMessage: (message, sourceOrigin, isMainFrame, replyProxy) {
+          final url = message?.data;
+          if (url is String) _openExternal(url);
+        },
+      ),
+    );
   }
 
   /// Receives Link's events in a WebView that shows Link without the Link SDK, e.g. a hosted payment link. Link posts
@@ -52,28 +54,34 @@ extension MeshLinkWebView on InAppWebViewController {
   /// With the bridge Link also offers Close on a boot error, which sends `done`. Only frames matching
   /// [_meshOriginRule] get it. Call before loading the page. Does nothing on an Android WebView without message
   /// listeners.
-  Future<void> setMeshLinkEventListener(void Function(String type, String json) listener) async {
+  Future<void> setMeshLinkEventListener(
+    void Function(String type, String json) listener,
+  ) async {
     if (!await _supportsMessageListeners()) return;
-    await addWebMessageListener(WebMessageListener(
-      jsObjectName: _linkJsBridge,
-      allowedOriginRules: {_meshOriginRule},
-      onPostMessage: (message, sourceOrigin, isMainFrame, replyProxy) {
-        final json = message?.data;
-        if (json is! String) return;
-        try {
-          final type = (jsonDecode(json) as Map<String, dynamic>)['type'];
-          if (type is String && type.isNotEmpty) listener(type, json);
-        } catch (_) {
-          // Not one of Link's events
-        }
-      },
-    ));
+    await addWebMessageListener(
+      WebMessageListener(
+        jsObjectName: _linkJsBridge,
+        allowedOriginRules: {_meshOriginRule},
+        onPostMessage: (message, sourceOrigin, isMainFrame, replyProxy) {
+          final json = message?.data;
+          if (json is! String) return;
+          try {
+            final type = (jsonDecode(json) as Map<String, dynamic>)['type'];
+            if (type is String && type.isNotEmpty) listener(type, json);
+          } catch (_) {
+            // Not one of Link's events
+          }
+        },
+      ),
+    );
   }
 }
 
 Future<bool> _supportsMessageListeners() async =>
     defaultTargetPlatform != TargetPlatform.android ||
-    await WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER);
+    await WebViewFeature.isFeatureSupported(
+      WebViewFeature.WEB_MESSAGE_LISTENER,
+    );
 
 /// The app that claims [url], else the browser. Ignores a URL nothing handles
 Future<void> _openExternal(String url) async {

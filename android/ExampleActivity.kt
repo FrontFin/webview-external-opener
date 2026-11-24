@@ -53,15 +53,16 @@ class ExampleActivity : AppCompatActivity() {
             domStorageEnabled = true
             cacheMode = WebSettings.LOAD_NO_CACHE
         }
+
         // Link runs in an iframe of another origin than the payment page, its session needs third-party cookies
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
-        /
-        / Without a client the WebView hands every page navigation to the browser, redirects of the page included
+
+        // Without a client the WebView hands every page navigation to the browser, redirects of the page included
         webView.webViewClient = WebViewClient()
-        
+
         // Wallets, OAuth and other pages Link opens go to their app, else the browser
         webView.enableMeshExternalOpener()
-        
+
         // Link closed, after Done or Exit
         webView.setMeshLinkEventListener { type, _ -> if (type == "done") finish() }
     }
