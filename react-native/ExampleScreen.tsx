@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { WebView } from 'react-native-webview'
 import { handleMeshMessage, meshWebViewProps } from './meshExternalOpener'
 
@@ -12,6 +12,13 @@ const paymentLink = 'https://...'
  * Link opens wallets, OAuth and other pages through `meshWebViewProps`. [onClose] runs when Link sends `done`.
  */
 export function ExampleScreen({ onClose }: { onClose: () => void }) {
+  // Link can send `done` more than once, close once
+  const isClosed = useRef(false)
+  const close = () => {
+    if (isClosed.current) return
+    isClosed.current = true
+    onClose()
+  }
   return (
     <WebView
       source={{ uri: paymentLink }}
@@ -23,7 +30,7 @@ export function ExampleScreen({ onClose }: { onClose: () => void }) {
       {...meshWebViewProps}
       onMessage={(event) => {
         // Link closed, after Done or Exit
-        if (handleMeshMessage(event, (type) => type === 'done' && onClose())) return
+        if (handleMeshMessage(event, (type) => type === 'done' && close())) return
         // your own messages
       }}
     />

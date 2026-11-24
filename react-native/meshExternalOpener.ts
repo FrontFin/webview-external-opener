@@ -1,7 +1,7 @@
 // Bridges for a react-native-webview that shows Link without the Link SDK, e.g. a hosted payment link: Link's
 // events, and the wallets, OAuth and other pages Link opens outside the WebView
 
-import { Linking } from 'react-native'
+import { Linking, Platform } from 'react-native'
 import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview'
 
 /** The object Link looks for, a new name so Link doesn't mistake the page for a native SDK host */
@@ -67,12 +67,17 @@ export const meshWebViewProps: Pick<
  *   - `brokerageAccountAccessToken`: an integration connected
  *   - `loaded` and the analytics events, e.g. `integrationSelected`
  *
- * `onMessage` can't tell which frame sent a message: the origin check in the shim is the only guard for URLs.
+ * Only messages from a Mesh page count, other pages in the WebView (an OAuth login it navigated to, an ad) can't
+ * make the app open URLs or act on fake events. The page is the sending frame on iOS, but the top page on Android, so
+ * there an iframe of a Mesh page could still post: Android drops URLs, which reach it from the main frame only, see
+ * the README.
  */
 export function handleMeshMessage(
   event: WebViewMessageEvent,
   onLinkEvent?: (type: string, json: string) => void,
 ): boolean {
+  // iOS reports the frame that sent the message, Android the top page
+  if (!isMeshPage(event.nativeEvent.url)) return false
   const json = event.nativeEvent.data
   let message: { type?: unknown; url?: unknown }
   try {
@@ -84,11 +89,19 @@ export function handleMeshMessage(
     return false
   }
   if (message.type === MESH_EXTERNAL_OPENER) {
-    if (typeof message.url === 'string') openExternal(message.url)
+    // On Android the shim runs in the main frame only, never in Link's iframe, and any frame can post
+    if (Platform.OS !== 'android' && typeof message.url === 'string') openExternal(message.url)
   } else {
     onLinkEvent?.(message.type, json)
   }
   return true
+}
+
+/** Whether [url] is an https page on a Mesh origin, the frames the shim serves */
+function isMeshPage(url: string | undefined): boolean {
+  // React Native's URL can't read the host. No user info, an optional port
+  const host = /^https:\/\/([^/?#:@]+)(?::\d+)?(?:[/?#]|$)/i.exec(url ?? '')?.[1]
+  return host != null && host.toLowerCase().endsWith(MESH_HOST_SUFFIX)
 }
 
 /** The app that claims [url], else the browser. Ignores a URL nothing handles */

@@ -24,8 +24,8 @@ react-native-webview has no named-object API, so the shim forwards through `wind
      // Wallets, OAuth and other pages Link opens go to their app, else the browser
      {...meshWebViewProps}
      onMessage={(event) => {
-       // Optional: close the screen when Link is done
-       if (handleMeshMessage(event, (type) => type === 'done' && onClose())) return
+       // Optional: close the screen when Link is done. It can send `done` more than once, close once
+       if (handleMeshMessage(event, (type) => type === 'done' && close())) return
        // your own messages
      }}
    />
@@ -33,7 +33,7 @@ react-native-webview has no named-object API, so the shim forwards through `wind
 
 ## ⚠️ Caveats
 
-- **Android doesn't reach Link's iframe.** react-native-webview injects scripts into the main frame only on Android (`injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false` is iOS-only), so Link's iframe never gets `window.meshExternalOpener`. On Android, use the [Android snippet](../android/) through a small native module instead. Link's events still reach `onMessage` there, because `window.ReactNativeWebView` exists in every frame.
+- **Android doesn't reach Link's iframe.** react-native-webview injects scripts into the main frame only on Android (`injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false` is iOS-only), so Link's iframe never gets `window.meshExternalOpener`, and `handleMeshMessage` ignores the URLs posted there. On Android, use the [Android snippet](../android/) through a small native module instead: its listener takes URLs from Mesh frames only. Link's events still reach `onMessage` there, because `window.ReactNativeWebView` exists in every frame.
 - **iOS:** react-native-webview defines `window.ReactNativeWebView` in the main frame only. The shim also defines it in Link's iframe, which is what lets both the URLs and Link's events through. Link then treats the page as a native host for events, and shows Close on a boot error, which sends `done`.
-- **No sender check:** `onMessage` can't tell which frame sent a message, so the origin check in the shim is the only guard.
+- **Sender check:** `handleMeshMessage` takes messages only when `event.nativeEvent.url` is an https page on `*.meshconnect.com`, so a page the WebView navigated to (an OAuth login, a help page) can't open URLs or post fake events. On iOS that URL is the frame that sent the message; on Android it's the top page, so an iframe inside a Mesh page could still post events there.
 - `handleMeshMessage` claims any JSON message with a string `type`. If your page posts its own typed messages, handle those first.
