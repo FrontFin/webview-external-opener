@@ -42,16 +42,18 @@ const shim = `
 
 /**
  * Lets Link open wallets, OAuth and other pages outside this WebView: spread onto `<WebView>`. Injects the shim
- * before the page loads, on iOS into every frame, Link's cross-origin iframe included.
+ * before the page loads into every frame, Link's cross-origin iframe included.
  * Pass the WebView's messages to [handleMeshMessage].
+ *
+ * iOS only: on Android the shim would reach the main frame alone, and replace the native module's
+ * `window.meshExternalOpener` there with one whose URLs [handleMeshMessage] ignores. See the README.
  */
 export const meshWebViewProps: Pick<
   WebViewProps,
   | 'injectedJavaScriptBeforeContentLoaded'
   | 'injectedJavaScriptBeforeContentLoadedForMainFrameOnly'
 > = {
-  injectedJavaScriptBeforeContentLoaded: shim,
-  // iOS only: Android injects into the main frame alone, see the README
+  injectedJavaScriptBeforeContentLoaded: Platform.OS === 'android' ? undefined : shim,
   injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false,
 }
 
