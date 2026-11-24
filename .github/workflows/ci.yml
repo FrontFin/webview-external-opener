@@ -1,0 +1,46 @@
+name: CI
+# Snippets aren't apps: these jobs only check that each file parses or type-checks.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ktlint
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.4.1/ktlint
+          chmod +x ktlint
+          ./ktlint "android/**/*.kt"
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: swiftc type-check
+        run: |
+          xcrun -sdk iphonesimulator swiftc -typecheck \
+            -target arm64-apple-ios15.0-simulator ios/MeshExternalOpener.swift ios/ExampleViewController.swift
+
+  react-native:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: react-native } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: flutter } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - run: flutter pub get
+      - run: flutter analyze
