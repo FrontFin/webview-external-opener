@@ -2,8 +2,11 @@ import React, { useRef } from 'react'
 import { WebView } from 'react-native-webview'
 import { handleMeshMessage, meshWebViewProps } from './meshExternalOpener'
 
-// The `paymentLink` of your link token
+// The `paymentLink` and `linkToken` of your link token response
 const paymentLink = 'https://...'
+const linkToken = '...'
+// The pages that may post to the app: the payment page, and Link, the URL the link token decodes to
+const origins = [paymentLink, atob(linkToken)]
 
 /**
  * Opens a hosted payment link (`paymentLink` of a link token requested with `generatePayLink`) in a plain WebView,
@@ -30,7 +33,7 @@ export function ExampleScreen({ onClose }: { onClose: () => void }) {
       {...meshWebViewProps}
       onMessage={(event) => {
         // Link closed, after Done or Exit
-        if (handleMeshMessage(event, (type) => type === 'done' && close())) return
+        if (handleMeshMessage(event, (type) => type === 'done' && close(), origins)) return
         // your own messages
       }}
     />

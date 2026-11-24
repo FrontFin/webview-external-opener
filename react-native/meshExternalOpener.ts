@@ -71,13 +71,17 @@ export const meshWebViewProps: Pick<
  * make the app open URLs or act on fake events. The page is the sending frame on iOS, but the top page on Android, so
  * there an iframe of a Mesh page could still post: Android drops URLs, which reach it from the main frame only, see
  * the README.
+ *
+ * [origins] narrows that to the pages you load, e.g. the payment page and Link: the https origins, or URLs on them,
+ * the sender's origin must equal. Without it, any `https://*.meshconnect.com` page counts.
  */
 export function handleMeshMessage(
   event: WebViewMessageEvent,
   onLinkEvent?: (type: string, json: string) => void,
+  origins?: readonly string[],
 ): boolean {
   // iOS reports the frame that sent the message, Android the top page
-  if (!isMeshPage(event.nativeEvent.url)) return false
+  if (!isAllowedSender(event.nativeEvent.url, origins)) return false
   const json = event.nativeEvent.data
   let message: { type?: unknown; url?: unknown }
   try {
@@ -97,11 +101,22 @@ export function handleMeshMessage(
   return true
 }
 
-/** Whether [url] is an https page on a Mesh origin, the frames the shim serves */
-function isMeshPage(url: string | undefined): boolean {
-  // React Native's URL can't read the host. No user info, an optional port
-  const host = /^https:\/\/([^/?#:@]+)(?::\d+)?(?:[/?#]|$)/i.exec(url ?? '')?.[1]
-  return host != null && host.toLowerCase().endsWith(MESH_HOST_SUFFIX)
+/** Whether [url] is an https page on one of [origins], or without them on a Mesh origin, the frames the shim serves */
+function isAllowedSender(url: string | undefined, origins: readonly string[] | undefined): boolean {
+  const sender = parseHttpsOrigin(url)
+  if (sender == null) return false
+  if (origins == null) return sender.host.endsWith(MESH_HOST_SUFFIX)
+  return origins.some((o) => parseHttpsOrigin(o)?.origin === sender.origin)
+}
+
+/** The lower-case `https://host[:port]` of [url], without the default port, and its host. No user info */
+function parseHttpsOrigin(url: string | undefined): { origin: string; host: string } | undefined {
+  // React Native's URL can't read the host
+  const match = /^https:\/\/([^/?#:@\s]+)(?::(\d{1,5}))?(?:[/?#]|$)/i.exec(url ?? '')
+  if (match == null) return undefined
+  const host = match[1].toLowerCase()
+  const port = match[2] != null && match[2] !== '443' ? `:${match[2]}` : ''
+  return { origin: `https://${host}${port}`, host }
 }
 
 /** The app that claims [url], else the browser. Ignores a URL nothing handles */
