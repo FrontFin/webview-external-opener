@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["meshExternalOpener.ts", "ExampleScreen.tsx"]
+  "include": ["meshExternalOpener.ts", "meshExternalOpenerAndroid.ts", "ExampleScreen.tsx"]
 }
