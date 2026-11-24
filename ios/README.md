@@ -30,7 +30,3 @@ WKWebView exposes handlers as `window.webkit.messageHandlers.<name>`, not `windo
 - `setMeshLinkEventListener` registers `jsMessageHandler`, the handler the Link iOS SDK uses. Link then treats the page as a native host for events, and shows Close on a boot error, which sends `done`.
 - If you have a `WKUIDelegate` that handles `createWebViewWith`, it no longer sees Link's new-window opens: Link hands them to the bridge instead.
 - Both files build with Swift 5 and Swift 6 language modes, iOS 15+.
-
-## Test checklist
-
-See the [root checklist](../README.md#test-checklist-all-platforms).

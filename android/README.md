@@ -41,7 +41,3 @@ Both bridges use `androidx.webkit`'s `WebViewCompat.addWebMessageListener`. It i
 - `about:`, `data:`, `blob:`, `javascript:` and `file:` URLs are never opened. Others go out with `ACTION_VIEW` + `CATEGORY_BROWSABLE`.
 - `setMeshLinkEventListener` exposes `window.JSBridge`, so Link treats the page as a native host for events, and shows Close on a boot error, which sends `done`.
 - Back navigation is up to your screen: the example doesn't handle it.
-
-## Test checklist
-
-See the [root checklist](../README.md#test-checklist-all-platforms). Also check on a device without the wallet installed: nothing should crash.

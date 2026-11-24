@@ -51,7 +51,3 @@ Both bridges use `flutter_inappwebview`'s `addWebMessageListener`, on Android an
 ## `webview_flutter`
 
 `addJavaScriptChannel('meshExternalOpener', …)` gives the same `window.meshExternalOpener.postMessage` name, but it has **no origin filter** and may not reach iframes on every platform. Not recommended; use `flutter_inappwebview`.
-
-## Test checklist
-
-See the [root checklist](../README.md#test-checklist-all-platforms). Run it on **both** iOS and Android.

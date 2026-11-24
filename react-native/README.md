@@ -37,7 +37,3 @@ react-native-webview has no named-object API, so the shim forwards through `wind
 - **iOS:** react-native-webview defines `window.ReactNativeWebView` in the main frame only. The shim also defines it in Link's iframe, which is what lets both the URLs and Link's events through. Link then treats the page as a native host for events, and shows Close on a boot error, which sends `done`.
 - **No sender check:** `onMessage` can't tell which frame sent a message, so the origin check in the shim is the only guard.
 - `handleMeshMessage` claims any JSON message with a string `type`. If your page posts its own typed messages, handle those first.
-
-## Test checklist
-
-See the [root checklist](../README.md#test-checklist-all-platforms). Run it on **both** iOS and Android.
