@@ -9,7 +9,7 @@ jobs:
   android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: ktlint
         run: |
           curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.4.1/ktlint
@@ -19,7 +19,7 @@ jobs:
   ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: swiftc type-check
         run: |
           xcrun -sdk iphonesimulator swiftc -typecheck \
@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: react-native } }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: 20 }
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: flutter } }
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with: { channel: stable }
       - run: flutter pub get
       - run: flutter analyze
