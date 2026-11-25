@@ -1,4 +1,4 @@
-package com.meshconnect.payer.ui.paylink
+package com.example
 
 import android.annotation.SuppressLint
 import android.os.Bundle

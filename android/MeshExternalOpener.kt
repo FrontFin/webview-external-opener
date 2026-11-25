@@ -12,7 +12,7 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import org.json.JSONObject
 
-/** The object link-v2 would look for, a new name so Link doesn't mistake the page for a native SDK host */
+/** The object Link looks for, a new name so Link doesn't mistake the page for a native SDK host */
 private const val MESH_EXTERNAL_OPENER = "meshExternalOpener"
 
 /**
@@ -28,7 +28,7 @@ private const val LINK_JS_BRIDGE = "JSBridge"
 private val BLOCKED_SCHEMES = setOf(null, "about", "data", "blob", "javascript", "file")
 
 /**
- * Let's Link open wallets, OAuth and other pages outside this WebView (proposed link-v2 change): Link calls
+ * Lets Link open wallets, OAuth and other pages outside this WebView: Link calls
  * `window.meshExternalOpener.postMessage(url)` instead of opening a window, and the URL goes to the app that claims
  * it, else the browser. Only frames matching [MESH_ORIGIN_RULE] get the object, Link's cross-origin iframe included.
  *
