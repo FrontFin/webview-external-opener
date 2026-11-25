@@ -6,6 +6,5 @@ Tags are contract versions. A change to the contract (global name, message forma
 
 - Contract: `window.meshExternalOpener.postMessage(url: string)`, injected before load into Link's frame, origins `https://*.meshconnect.com`.
 - Optional Link event listener on every platform (`done`, `transferFinished`…).
-- React Native: `handleMeshMessage` takes messages only from a Mesh page (`event.nativeEvent.url`), and ignores posted URLs on Android, where the native Android snippet opens them. Optional `origins` narrows the senders to the payment page and Link. The example closes once when Link sends `done` again.
-- React Native, Android: `MeshWebView` (`react-native/android/`), react-native-webview's WebView with the Android snippet, which `meshWebViewProps` picks through `nativeConfig`, so Link's URLs open there too. `meshWebViewProps` injects the shim on iOS only, so it doesn't replace the native object in Android's main frame.
 - Per platform: a bridge file and an example screen. Android (`androidx.webkit`), iOS (`WKWebView`), React Native (`react-native-webview`), Flutter (`flutter_inappwebview`).
+- React Native: messages only from Mesh pages, or the given `origins`. The shim on iOS, `MeshWebView` (the Android snippet) on Android.
