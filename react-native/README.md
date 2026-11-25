@@ -53,7 +53,7 @@ The two Kotlin files in `android/`:
    />
    ```
 
-5. Optional, but recommended: pass `origins`, the payment page and Link's URL (your link token, base64-decoded), as the third argument to `handleMeshMessage`. Then only those two pages can talk to your app. The example does this.
+5. Optional, but recommended: pass `origins`, the payment page and Link's URL (your link token, base64-decoded), as the third argument to `handleMeshMessage`. That scopes which pages can talk to your app through `handleMeshMessage`, Link's events included. The Android native opener is separate: it always accepts any `https://*.meshconnect.com` frame, `origins` doesn't narrow it (see [Good to know](#good-to-know)). The example does this.
 
 ## How it works
 
@@ -67,7 +67,7 @@ Link's events reach `onMessage` on both platforms.
 ## Good to know
 
 - **Android and the New Architecture:** `MeshWebView` was tried with `newArchEnabled=false` (React Native 0.76) on a Galaxy S25. Under the New Architecture it relies on React Native's compatibility layer for older native views. Test it there before you ship.
-- **If Android isn't set up:** without `MeshExternalOpenerPackage` registered, you get a warning and a plain WebView. Link still works, but its pages open inside the WebView.
+- **If Android isn't set up:** without `MeshExternalOpenerPackage` registered, you get a warning and a plain WebView, with no fallback. Wallets and other pages Link wants to open outside the WebView won't open at all; wallet deep links can fail with `ERR_UNKNOWN_URL_SCHEME`.
 - **Who can send messages:** `handleMeshMessage` only listens to `https://*.meshconnect.com` pages, or just your `origins` if you pass them. So a page the WebView ends up on, such as an OAuth login, can't open URLs or fake Link's events. On Android the check sees the main page, not the iframe that sent the message, so an iframe inside a Mesh page could still send events there.
 - **Your own messages:** `handleMeshMessage` takes any JSON message with a string `type`. If your page sends its own typed messages, handle those first.
 - **iOS side effect:** the script also defines `window.ReactNativeWebView` in Link's iframe, which react-native-webview only defines in the main page. That's what lets Link's events through. Link then treats your screen as a native app: if Link fails to start, it shows a Close button, which sends `done`.

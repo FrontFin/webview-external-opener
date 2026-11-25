@@ -61,7 +61,7 @@ Link checks for a `window.meshExternalOpener` object. If it's there, Link hands 
 ## Good to know
 
 - **⚠️ Check iOS:** on iOS, `flutter_inappwebview` imitates message listeners with injected scripts. Test that Link's iframe gets `window.meshExternalOpener` there before you ship.
-- **Old Android devices:** on a phone whose Android System WebView is too old for message listeners, both functions do nothing. Link still works, but its pages open inside the WebView.
+- **Old Android devices:** on a phone whose Android System WebView is too old for message listeners, both functions do nothing, with no fallback. Wallet deep links can fail with an unknown-scheme error, and Link's events won't reach you, unless you add your own handling.
 - **What's never opened:** `about:`, `data:`, `blob:`, `javascript:` and `file:` URLs. Everything else goes to `launchUrl` with `LaunchMode.externalApplication`.
 - **Event listener side effect:** `setMeshLinkEventListener` adds `window.JSBridge`, so Link treats your page as a native app. If Link fails to start, it shows a Close button, which sends `done`.
 

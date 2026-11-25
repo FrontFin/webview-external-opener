@@ -56,7 +56,7 @@ Link checks for a `window.meshExternalOpener` object. If it's there, Link hands 
 
 ## Good to know
 
-- **Old devices:** on a phone whose Android System WebView is too old for message listeners, both functions do nothing. Link still works, but its pages open inside the WebView.
+- **Old devices:** on a phone whose Android System WebView is too old for message listeners, both functions do nothing, with no fallback. Wallets and other pages Link wants to open outside the WebView won't open at all unless you add your own handling, and Link's events won't reach you either.
 - **What's never opened:** `about:`, `data:`, `blob:`, `javascript:` and `file:` URLs. Everything else goes out as an `ACTION_VIEW` intent for a browsable app.
 - **Event listener side effect:** `setMeshLinkEventListener` adds `window.JSBridge`, so Link treats your screen as a native app. If Link fails to start, it shows a Close button, which sends `done`.
 - **Back button:** handling Back is up to your screen. The example doesn't do it.
