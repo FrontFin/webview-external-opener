@@ -58,12 +58,16 @@ export const meshWebViewProps: Pick<
   'injectedJavaScriptBeforeContentLoaded' | 'injectedJavaScriptBeforeContentLoadedForMainFrameOnly' | 'nativeConfig'
 > =
   Platform.OS === 'android'
-    ? {
-        nativeConfig: UIManager.hasViewManagerConfig(MESH_WEB_VIEW)
-          ? { component: requireNativeComponent(MESH_WEB_VIEW) }
-          : undefined,
-      }
+    ? { nativeConfig: meshWebViewConfig() }
     : { injectedJavaScriptBeforeContentLoaded: shim, injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false }
+
+/** `MeshWebView` for `nativeConfig`, or none, with a warning, when `MeshExternalOpenerPackage` isn't registered */
+function meshWebViewConfig(): WebViewProps['nativeConfig'] {
+  if (UIManager.hasViewManagerConfig(MESH_WEB_VIEW)) return { component: requireNativeComponent(MESH_WEB_VIEW) }
+  // Link still runs, but nothing it opens leaves the WebView
+  console.warn(`${MESH_WEB_VIEW} isn't registered: add MeshExternalOpenerPackage to your MainApplication`)
+  return undefined
+}
 
 /**
  * Handles a WebView message from Link, call it from `onMessage`. Returns true when the message was Link's, so you can
@@ -79,8 +83,8 @@ export const meshWebViewProps: Pick<
  *
  * Only messages from a Mesh page count, other pages in the WebView (an OAuth login it navigated to, an ad) can't
  * make the app open URLs or act on fake events. The page is the sending frame on iOS, but the top page on Android, so
- * there an iframe of a Mesh page could still post: Android drops URLs, which reach it from the main frame only, see
- * the README.
+ * there an iframe of a Mesh page could still post: Android drops posted URLs, which `MeshWebView`'s native listener
+ * opens instead, see the README.
  *
  * [origins] narrows that to the pages you load, e.g. the payment page and Link: the https origins, or URLs on them,
  * the sender's origin must equal. Without it, any `https://*.meshconnect.com` page counts.
@@ -103,7 +107,8 @@ export function handleMeshMessage(
     return false
   }
   if (message.type === MESH_EXTERNAL_OPENER) {
-    // On Android the shim runs in the main frame only, never in Link's iframe, and any frame can post
+    // On Android `MeshWebView` opens Link's URLs natively and the shim isn't injected, so this one came from a page
+    // posting it by hand
     if (Platform.OS !== 'android' && typeof message.url === 'string') openExternal(message.url)
   } else {
     onLinkEvent?.(message.type, json)

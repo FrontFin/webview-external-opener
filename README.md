@@ -33,7 +33,7 @@ Your app injects `window.meshExternalOpener` into Link's frame before the page l
 |---|---|---|
 | Android (Kotlin) | [`android/`](android/) | `androidx.webkit` `WebViewCompat.addWebMessageListener` |
 | iOS (Swift) | [`ios/`](ios/) | `WKWebView` user script + `WKScriptMessageHandler` |
-| React Native | [`react-native/`](react-native/) | `react-native-webview` shim. ⚠️ iOS only, see its README |
+| React Native | [`react-native/`](react-native/) | `react-native-webview` shim on iOS, a WebView view manager on Android. ⚠️ Android tried with `newArchEnabled=false` only, see its README |
 | Flutter | [`flutter/`](flutter/) | `flutter_inappwebview` `addWebMessageListener` |
 
 Each folder has the bridge file to copy, an example screen, an optional Link event listener, and a README with setup steps.
