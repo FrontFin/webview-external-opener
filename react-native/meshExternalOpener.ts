@@ -1,7 +1,7 @@
 // Bridges for a react-native-webview that shows Link without the Link SDK, e.g. a hosted payment link: Link's
 // events, and the wallets, OAuth and other pages Link opens outside the WebView
 
-import { Linking, Platform } from 'react-native'
+import { Linking, Platform, UIManager, requireNativeComponent } from 'react-native'
 import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview'
 
 /** The object Link looks for, a new name so Link doesn't mistake the page for a native SDK host */
@@ -40,22 +40,30 @@ const shim = `
   })();
   true;`
 
+/** The Android WebView with the native opener, see `android/MeshWebViewManager.kt` */
+const MESH_WEB_VIEW = 'MeshWebView'
+
 /**
- * Lets Link open wallets, OAuth and other pages outside this WebView: spread onto `<WebView>`. Injects the shim
- * before the page loads into every frame, Link's cross-origin iframe included.
+ * Lets Link open wallets, OAuth and other pages outside this WebView: spread onto `<WebView>`.
  * Pass the WebView's messages to [handleMeshMessage].
  *
- * iOS only: on Android the shim would reach the main frame alone, and replace the native module's
- * `window.meshExternalOpener` there with one whose URLs [handleMeshMessage] ignores. See the README.
+ * - iOS: injects the shim before the page loads into every frame, Link's cross-origin iframe included.
+ * - Android: react-native-webview injects into the main frame only, so it swaps in the native `MeshWebView`, which runs
+ *   the Android snippet. Without it registered, Link runs without the opener. The shim isn't injected: it would
+ *   replace the native `window.meshExternalOpener` in a Mesh main frame with one whose URLs [handleMeshMessage]
+ *   ignores.
  */
 export const meshWebViewProps: Pick<
   WebViewProps,
-  | 'injectedJavaScriptBeforeContentLoaded'
-  | 'injectedJavaScriptBeforeContentLoadedForMainFrameOnly'
-> = {
-  injectedJavaScriptBeforeContentLoaded: Platform.OS === 'android' ? undefined : shim,
-  injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false,
-}
+  'injectedJavaScriptBeforeContentLoaded' | 'injectedJavaScriptBeforeContentLoadedForMainFrameOnly' | 'nativeConfig'
+> =
+  Platform.OS === 'android'
+    ? {
+        nativeConfig: UIManager.hasViewManagerConfig(MESH_WEB_VIEW)
+          ? { component: requireNativeComponent(MESH_WEB_VIEW) }
+          : undefined,
+      }
+    : { injectedJavaScriptBeforeContentLoaded: shim, injectedJavaScriptBeforeContentLoadedForMainFrameOnly: false }
 
 /**
  * Handles a WebView message from Link, call it from `onMessage`. Returns true when the message was Link's, so you can
