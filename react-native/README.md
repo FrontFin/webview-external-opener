@@ -12,7 +12,7 @@ react-native-webview has no named-object API, so the shim forwards through `wind
 
 ## Setup
 
-1. `react-native-webview` 13 or newer.
+1. `react-native-webview` 13 or newer; 13.6.2 or newer on Android, where `MeshWebViewManager` needs its `RNCWebViewWrapper`. Tried with 13.12.5.
 2. Copy [`meshExternalOpener.ts`](meshExternalOpener.ts) into your app.
 3. Android (tried with `newArchEnabled=false` only, see the New Architecture caveat):
    - Add `implementation("androidx.webkit:webkit:1.12.1")` to `android/app/build.gradle`.
