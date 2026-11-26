@@ -15,3 +15,7 @@ Versions are contract versions, tagged `v1`, `v2`…: a change to the contract (
 
 ### Security
 - React Native: `handleMeshMessage` takes messages only from Mesh pages, and ignores posted URLs on Android
+- React Native: on iOS `handleMeshMessage` opens a URL only with the shim's per-run token, react-native-webview reports the top page as the sender there too, so an iframe of a Mesh page could post one
+
+### Fixed
+- iOS: calling `enableMeshExternalOpener()` again no longer adds the shim's user script again

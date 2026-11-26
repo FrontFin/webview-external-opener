@@ -17,9 +17,17 @@ const MESH_HOST_SUFFIX = '.meshconnect.com'
 const BLOCKED_SCHEMES = new Set(['', 'about', 'data', 'blob', 'javascript', 'file'])
 
 /**
+ * Proves a URL came through the shim's `window.meshExternalOpener`, i.e. from a Mesh frame: react-native-webview's
+ * handler takes messages from every frame and reports the top page as the sender, so an iframe of a Mesh page could
+ * post a URL by hand. The shim only uses the token in frames on a Mesh origin, and other frames can't read it there.
+ * Math.random: a frame never sees the app's other random values, and crypto may not be polyfilled yet at import
+ */
+const OPENER_TOKEN = Array.from({ length: 4 }, () => Math.random().toString(36).slice(2)).join('')
+
+/**
  * react-native-webview has no named-object API, so this shim defines `window.meshExternalOpener` in frames on a
  * Mesh origin and forwards through `window.ReactNativeWebView.postMessage`, tagged so it can't be confused with
- * Link's events or your own messages.
+ * Link's events or your own messages, and with [OPENER_TOKEN].
  *
  * On iOS react-native-webview defines `window.ReactNativeWebView` in the main frame only, while its native handler
  * takes messages from every frame. So the shim defines it in Link's iframe too, which also lets Link post its events.
@@ -34,7 +42,7 @@ const shim = `
     window.${MESH_EXTERNAL_OPENER} = {
       postMessage: function (u) {
         window.ReactNativeWebView.postMessage(
-          JSON.stringify({ type: '${MESH_EXTERNAL_OPENER}', url: String(u) }));
+          JSON.stringify({ type: '${MESH_EXTERNAL_OPENER}', url: String(u), token: '${OPENER_TOKEN}' }));
       }
     };
   })();
@@ -82,9 +90,9 @@ function meshWebViewConfig(): WebViewProps['nativeConfig'] {
  *   - `loaded` and the analytics events, e.g. `integrationSelected`
  *
  * Only messages from a Mesh page count, other pages in the WebView (an OAuth login it navigated to, an ad) can't
- * make the app open URLs or act on fake events. The page is the sending frame on iOS, but the top page on Android, so
- * there an iframe of a Mesh page could still post: Android drops posted URLs, which `MeshWebView`'s native listener
- * opens instead, see the README.
+ * make the app open URLs or act on fake events. The page is the top page, not the sending frame, so an iframe of a Mesh
+ * page could still post: it can fake events, but not URLs, which iOS only opens with the shim's token and Android
+ * leaves to `MeshWebView`'s native listener, see the README.
  *
  * [origins] narrows that to the pages you load, e.g. the payment page and Link: the https origins, or URLs on them,
  * the sender's origin must equal. Without it, any `https://*.meshconnect.com` page counts.
@@ -94,10 +102,10 @@ export function handleMeshMessage(
   onLinkEvent?: (type: string, json: string) => void,
   origins?: readonly string[],
 ): boolean {
-  // iOS reports the frame that sent the message, Android the top page
+  // The top page on both platforms, not the frame that sent the message
   if (!isAllowedSender(event.nativeEvent.url, origins)) return false
   const json = event.nativeEvent.data
-  let message: { type?: unknown; url?: unknown }
+  let message: { type?: unknown; url?: unknown; token?: unknown }
   try {
     message = JSON.parse(json)
   } catch {
@@ -107,9 +115,11 @@ export function handleMeshMessage(
     return false
   }
   if (message.type === MESH_EXTERNAL_OPENER) {
-    // On Android `MeshWebView` opens Link's URLs natively and the shim isn't injected, so this one came from a page
-    // posting it by hand
-    if (Platform.OS !== 'android' && typeof message.url === 'string') openExternal(message.url)
+    // Without the token a frame posted it by hand. On Android `MeshWebView` opens Link's URLs natively and the shim
+    // isn't injected, so there every one was
+    if (Platform.OS !== 'android' && message.token === OPENER_TOKEN && typeof message.url === 'string') {
+      openExternal(message.url)
+    }
   } else {
     onLinkEvent?.(message.type, json)
   }
