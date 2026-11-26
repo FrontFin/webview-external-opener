@@ -46,8 +46,11 @@ extension WKWebView {
         }
         """
         let controller = configuration.userContentController
-        // Link runs in an iframe: every frame gets the script, the shim keeps the object to Mesh origins
-        controller.addUserScript(WKUserScript(source: shim, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+        // Link runs in an iframe: every frame gets the script, the shim keeps the object to Mesh origins. Once only,
+        // a repeated call replaces the handler below but would stack the script
+        if !controller.userScripts.contains(where: { $0.source == shim }) {
+            controller.addUserScript(WKUserScript(source: shim, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+        }
         controller.removeScriptMessageHandler(forName: meshExternalOpener)
         controller.add(MessageHandler { message in
             // Checked again here: the handler itself is reachable from every frame

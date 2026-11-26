@@ -59,7 +59,7 @@ The two Kotlin files in `android/`:
 
 Link checks for a `window.meshExternalOpener` object. If it's there, Link hands it every page it wants to open, instead of trying to open a window the WebView can't show. Link runs in an iframe, so the object has to be in that iframe, not just the main page. Each platform gets it there differently:
 
-- **iOS:** `meshWebViewProps` injects a small script into every frame on `https://*.meshconnect.com`, Link's iframe included. The script defines `window.meshExternalOpener` and forwards each page to your `onMessage`, as `{ type: 'meshExternalOpener', url }`. `handleMeshMessage` opens it.
+- **iOS:** `meshWebViewProps` injects a small script into every frame on `https://*.meshconnect.com`, Link's iframe included. The script defines `window.meshExternalOpener` and forwards each page to your `onMessage`, as `{ type: 'meshExternalOpener', url, token }`. `handleMeshMessage` opens it only with the script's token, a random value made once per app run that only frames on `https://*.meshconnect.com` get.
 - **Android:** react-native-webview can only inject scripts into the main page there, not into Link's iframe. So `meshWebViewProps` swaps in `MeshWebView`, which adds `window.meshExternalOpener` natively, as the [Android snippet](../android/) does, and opens the pages itself.
 
 Link's events reach `onMessage` on both platforms.
@@ -68,6 +68,6 @@ Link's events reach `onMessage` on both platforms.
 
 - **Android and the New Architecture:** `MeshWebView` was tried with `newArchEnabled=false` (React Native 0.76) on a Galaxy S25. Under the New Architecture it relies on React Native's compatibility layer for older native views. Test it there before you ship.
 - **If Android isn't set up:** without `MeshExternalOpenerPackage` registered, you get a warning and a plain WebView, with no fallback. Wallets and other pages Link wants to open outside the WebView won't open at all; wallet deep links can fail with `ERR_UNKNOWN_URL_SCHEME`.
-- **Who can send messages:** `handleMeshMessage` only listens to `https://*.meshconnect.com` pages, or just your `origins` if you pass them. So a page the WebView ends up on, such as an OAuth login, can't open URLs or fake Link's events. On Android the check sees the main page, not the iframe that sent the message, so an iframe inside a Mesh page could still send events there.
+- **Who can send messages:** `handleMeshMessage` only listens to `https://*.meshconnect.com` pages, or just your `origins` if you pass them. So a page the WebView ends up on, such as an OAuth login, can't open URLs or fake Link's events. On both iOS and Android the check sees the main page, not the iframe that sent the message, so an iframe inside a Mesh page could still send events. It can't open URLs: iOS needs the script's token, and Android leaves them to `MeshWebView`.
 - **Your own messages:** `handleMeshMessage` takes any JSON message with a string `type`. If your page sends its own typed messages, handle those first.
 - **iOS side effect:** the script also defines `window.ReactNativeWebView` in Link's iframe, which react-native-webview only defines in the main page. That's what lets Link's events through. Link then treats your screen as a native app: if Link fails to start, it shows a Close button, which sends `done`.
